@@ -50,17 +50,19 @@ void clrscr()
 	SetConsoleCursorPosition(hOut,Home);
 }
 
-void SetConSize(int iWeight, int iHeight)
+int SetConSize(int iWeight, int iHeight)
 {
+	int ret = 0;
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	COORD size = {iWeight, iHeight};
-	SetConsoleScreenBufferSize(hOut,size);
+	ret += SetConsoleScreenBufferSize(hOut,size);
 	SMALL_RECT rc = {0,0,iWeight-1,iHeight-1};
-	SetConsoleWindowInfo(hOut , TRUE, &rc);
-	SetConsoleScreenBufferSize(hOut,size);
+	ret += SetConsoleWindowInfo(hOut , TRUE, &rc);
+	ret += SetConsoleScreenBufferSize(hOut,size);
+	return ret;
 }
 
-inline int isTouch(int **map, COORD *p, COORD *size)
+int isTouch(int **map, COORD *p, COORD *size)
 {
 	if(p->X<0 || p->Y<0 || p->X>size->X-1 || p->Y>size->Y-1)
 		return 0;
@@ -80,7 +82,7 @@ void init_window()
 	st(255);
 	CONSOLE_CURSOR_INFO cursor_info = {1, 0}; 
 	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor_info);
-	SetConsoleTitle("…®¿◊ - ÷˜ΩÁ√Ê");
+	SetConsoleTitle("Êâ´Èõ∑ - ‰∏ªÁïåÈù¢");
 	HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
 	DWORD mode;
 	GetConsoleMode(hIn, &mode);
@@ -100,7 +102,7 @@ void clear(int **mi, int **op, COORD *p, COORD *size)
 		for(int j=0;j<3;++j)
 			n+=isTouch(mi, &(COORD){p->X-2+i*2,p->Y-1+j}, size);
 	char nom[3];
-	strcpy(nom,"¢Ÿ");
+	strcpy(nom,"‚ë†");
 	nom[1] = nom[1]+n-1;
 	printf(n?"%s":" ",nom);
 	op[p->X/2][p->Y] = 1;
@@ -126,6 +128,8 @@ int gamemain(int x, int y, int n)
 	srand((unsigned)time(NULL));
 	int Mine_Nums = n;
 	COORD size = {x,y+1};
+	if(!SetConSize(size.X*2,size.Y))
+		return -2;
 	int **mi = (int**)malloc(sizeof(int*)*x);
 	for(int i=0;i<x;++i)
 		mi[i] = (int*)calloc(1,sizeof(int)*y);
@@ -144,16 +148,15 @@ int gamemain(int x, int y, int n)
 		}
 		mi[tmp.X][tmp.Y] = 1;
 	}
-	SetConSize(size.X*2,size.Y);
 	for(int i=0;i<y;++i)
 		for(int j=0;j<x*2;j+=2)
 		{
 			gotoxy(j,i);
-			printf("°ˆ");
+			printf("‚ñ†");
 		}
-	gotoxy(0,size.X);
+	gotoxy(0,size.Y);
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-	printf("∞¥ESCº¸∑µªÿ≤Àµ•");
+	printf("ÊåâEscÈîÆËøîÂõûËèúÂçï");
 	MCE *m = (MCE*)malloc(sizeof(MCE));
 	Mouse_ReadConClickEvent(m);
 	int first = 0;
@@ -161,9 +164,9 @@ int gamemain(int x, int y, int n)
 	clock_t rt = 0;
 	int pmn = n;
 	char p[50];
-	sprintf(p,"…®¿◊ - ”Œœ∑÷– |  £”‡¿◊ ˝:%4d",pmn);
+	sprintf(p,"Êâ´Èõ∑ - Ê∏∏Êàè‰∏≠ | Ââ©‰ΩôÈõ∑Êï∞:%4d",pmn);
 	SetConsoleTitle(p);
-	while(1)
+	for(;;)
 	{
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_RED|FOREGROUND_GREEN);
 		if(GetKeyState(VK_ESCAPE)<0)
@@ -202,12 +205,12 @@ lose:
 							if(mi[j][i])
 							{
 								gotoxy(j*2,i);
-								printf("°Ò");
+								printf("‚óè");
 							}
 					gotoxy(m->cPos.X,m->cPos.Y);
 					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED);
-					printf("°Ò");
-					MessageBox(NULL, "ƒ„ ‰¡À!", "”Œœ∑ ß∞‹", MB_OK|MB_ICONWARNING);
+					printf("‚óè");
+					MessageBox(NULL, "‰Ω†Ëæì‰∫Ü!", "Ê∏∏ÊàèÂ§±Ë¥•", MB_OK|MB_ICONWARNING);
 					for(int i=0;i<x;++i)
 						free(mi[i]);
 					free(mi);
@@ -237,21 +240,21 @@ lose:
 					--pmn;
 					op[m->cPos.X/2][m->cPos.Y] = 2;
 					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-					printf("°Ô");
+					printf("‚òÖ");
 					break;
 				case 2:
 					++pmn;
 					op[m->cPos.X/2][m->cPos.Y] = 3;
 					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-					printf("£ø");
+					printf("Ôºü");
 					break;
 				case 3:
 					op[m->cPos.X/2][m->cPos.Y] = 0;
 					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-					printf("°ˆ");
+					printf("‚ñ†");
 					break;
 			}
-			sprintf(p,"…®¿◊ - ”Œœ∑÷– |  £”‡¿◊ ˝:%4d",pmn);
+			sprintf(p,"Êâ´Èõ∑ - Ê∏∏Êàè‰∏≠ | Ââ©‰ΩôÈõ∑Êï∞:%4d",pmn);
 			SetConsoleTitle(p);
 			while(!Mouse_ReadConClickEvent(m) || m->Button == 1);
 		}
@@ -296,8 +299,8 @@ lose:
 		{
 			clock_t end = clock();
 			char p[30];
-			sprintf(p,"ƒ„”Æ¡À!\n”√ ±: %.3f√Î",(double)(end-start-rt)/1000);
-			MessageBox(NULL, p, "”Œœ∑ §¿˚", MB_OK|MB_ICONINFORMATION);
+			sprintf(p,"‰Ω†Ëµ¢‰∫Ü!\nÁî®Êó∂: %.3fÁßí",(double)(end-start-rt)/1000);
+			MessageBox(NULL, p, "Ê∏∏ÊàèËÉúÂà©", MB_OK|MB_ICONINFORMATION);
 			for(int i=0;i<x;++i)
 				free(mi[i]);
 			free(mi);
@@ -315,39 +318,39 @@ lose:
 void printmain()
 {
 	clrscr();
-	SetConsoleTitle("…®¿◊ - ÷˜ΩÁ√Ê");
+	SetConsoleTitle("Êâ´Èõ∑ - ‰∏ªÁïåÈù¢");
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 	SetConSize(90,30);
 	gotoxy(BASE_LINE_X+5,BASE_LINE_Y);
-	printf("…®¿◊");
+	printf("Êâ´Èõ∑");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+5);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+6);
-	printf("|   ø™ º”Œœ∑   |");
+	printf("|   ÂºÄÂßãÊ∏∏Êàè   |");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+7);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+9);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+10);
-	printf("|     …Ë÷√     |");
+	printf("|     ËÆæÁΩÆ     |");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+11);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+13);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+14);
-	printf("|     ∞Ô÷˙     |");
+	printf("|     Â∏ÆÂä©     |");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+15);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+17);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+18);
-	printf("|     πÿ”⁄     |");
+	printf("|     ÂÖ≥‰∫é     |");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+19);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+21);
 	printf("*==============*");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+22);
-	printf("|     ÕÀ≥ˆ     |");
+	printf("|     ÈÄÄÂá∫     |");
 	gotoxy(BASE_LINE_X,BASE_LINE_Y+23);
 	printf("*==============*");
 }
@@ -355,29 +358,43 @@ void printmain()
 void help()
 {
 	clrscr();
-	SetConsoleTitle("…®¿◊ - ∞Ô÷˙");
+	SetConsoleTitle("Êâ´Èõ∑ - Â∏ÆÂä©");
 	SetConSize(90,30);
 	gotoxy(10,3);
-	printf("∞Ô÷˙: ");
+	printf("Â∏ÆÂä©: ");
+	gotoxy(10,BASE_LINE_Y+3);
+	printf("Ê∏∏ÊàèÁõÆÊ†á: ÊâæÂá∫Á©∫ÊñπÂùóÂπ∂ÈÅøÂÖçËß¶Èõ∑");
 	gotoxy(10,BASE_LINE_Y+5);
-	printf("”Œœ∑ƒø±Í: ’“≥ˆø’∑ΩøÈ≤¢±‹√‚¥•¿◊");
+	printf("Áé©Ê≥ï: ");
+	gotoxy(10,BASE_LINE_Y+6);
+	printf("* ÊåñÂºÄÂú∞Èõ∑,Ê∏∏ÊàèÂÆ£ÂëäÁªìÊùü");
 	gotoxy(10,BASE_LINE_Y+7);
-	printf("ÕÊ∑®: ");
+	printf("* ÊåñÂºÄÁ©∫ÊñπÂùó,ÂèØ‰ª•ÁªßÁª≠Áé©");
+	gotoxy(10,BASE_LINE_Y+8);
+	printf("* ÊåñÂºÄÊï∞Â≠ó,ÂàôË°®Á§∫Âú®ÂÖ∂Âë®Âõ¥ÁöÑÂÖ´‰∏™ÊñπÂùó‰∏≠ÂÖ±ÊúâÂ§öÂ∞ëÈõ∑,ÂèØ‰ª•‰ΩøÁî®ËØ•‰ø°ÊÅØ");
 	gotoxy(10,BASE_LINE_Y+9);
-	printf("* Õ⁄ø™µÿ¿◊,”Œœ∑–˚∏ÊΩ· ¯");
+	printf("  Êé®Êñ≠Âá∫ËÉΩÂ§üÂÆâÂÖ®ÂçïÂáªÈôÑËøëÁöÑÂì™‰∫õÊñπÂùó");
+	gotoxy(10,BASE_LINE_Y+11);
+	printf("ËÆæÁΩÆÈÄâÈ°πËØ¥Êòé: ");
 	gotoxy(10,BASE_LINE_Y+12);
-	printf("* Õ⁄ø™ø’∑ΩøÈ,ø…“‘ºÃ–¯ÕÊ");
+	printf("* ÂÆΩÂ∫¶ - ÊñπÂùóÁöÑXËΩ¥‰∏™Êï∞");
+	gotoxy(10,BASE_LINE_Y+13);
+	printf("* È´òÂ∫¶ - ÊñπÂùóÁöÑYËΩ¥‰∏™Êï∞");
+	gotoxy(10,BASE_LINE_Y+14);
+	printf("* Èõ∑Êï∞ - Èõ∑ÁöÑÊï∞Èáè(Â§ßËá¥ÁöÑÊï∞Èáè)");
 	gotoxy(10,BASE_LINE_Y+15);
-	printf("* Õ⁄ø™ ˝◊÷,‘Ú±Ì æ‘⁄∆‰÷‹Œßµƒ∞À∏ˆ∑ΩøÈ÷–π≤”–∂‡…Ÿ¿◊,ø…“‘ π”√∏√–≈œ¢");
+	printf("* Èõ∑Êï∞ÁªÜÂáÜËæÉ - ÂΩìÈúÄË¶ÅÁ≤æÁ°ÆÁöÑÈõ∑Êï∞Êó∂Ë∞ÉÊï¥Ê≠§ÈÄâÈ°πÂç≥ÂèØ");
 	gotoxy(10,BASE_LINE_Y+16);
-	printf("  Õ∆∂œ≥ˆƒ‹πª∞≤»´µ•ª˜∏ΩΩ¸µƒƒƒ–©∑ΩøÈ");
+	printf("* ÁïåÈù¢ÈÄèÊòéÂ∫¶ - Êõ¥ÊîπÁïåÈù¢ÁöÑÈÄèÊòéÂ∫¶(ÈÉ®ÂàÜÊòæÂç°ÂèØËÉΩ‰∏çÊîØÊåÅÊ≠§ÈÄâÈ°π)");
+
 	gotoxy(60,21);
 	printf("*==============*");
 	gotoxy(60,22);
-	printf("|     »∑∂®     |");
+	printf("|     Á°ÆÂÆö     |");
 	gotoxy(60,23);
 	printf("*==============*");
 	MCE *m = (MCE*)malloc(sizeof(MCE));
+	while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 	while(!Mouse_ReadConClickEvent(m) || m->Button || !(m->cPos.Y >= 21 && m->cPos.Y <= 23 && m->cPos.X>59 && m->cPos.X<76));
 	free(m);
 }
@@ -385,23 +402,24 @@ void help()
 void about()
 {
 	clrscr();
-	SetConsoleTitle("…®¿◊ - πÿ”⁄");
+	SetConsoleTitle("Êâ´Èõ∑ - ÂÖ≥‰∫é");
 	SetConSize(90,30);
 	gotoxy(10,3);
-	printf("πÿ”⁄: ");
+	printf("ÂÖ≥‰∫é: ");
 	gotoxy(10,BASE_LINE_Y+5);
 	printf("By: Truth");
 	gotoxy(10,BASE_LINE_Y+7);
 	printf("E-Mail: 2568878009@qq.com");
 	gotoxy(10,BASE_LINE_Y+9);
-	printf("»’∆⁄: 2018/9/17");
+	printf("Êó•Êúü: 2018/9/18");
 	gotoxy(60,21);
 	printf("*==============*");
 	gotoxy(60,22);
-	printf("|     »∑∂®     |");
+	printf("|     Á°ÆÂÆö     |");
 	gotoxy(60,23);
 	printf("*==============*");
 	MCE *m = (MCE*)malloc(sizeof(MCE));
+	while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 	while(!Mouse_ReadConClickEvent(m) || m->Button || !(m->cPos.Y >= 21 && m->cPos.Y <= 23 && m->cPos.X>59 && m->cPos.X<76));
 	free(m);
 }
@@ -415,69 +433,64 @@ typedef struct _arguments_of_gamemain
 	int t;
 } ag;
 
-void settings(ag *a)
+void printsettings(ag *a, ag *sr)
 {
-	clrscr();
-setbeg:
-	SetConsoleTitle("…®¿◊ - …Ë÷√");
 	gotoxy(10,3);
-	printf("…Ë÷√: ");
+	printf("ËÆæÁΩÆ: ");
 	gotoxy(10,BASE_LINE_Y+5);
-	printf("øÌ∂»:      [");
+	printf("ÂÆΩÂ∫¶:      [");
 	printf("============================================================");
 	printf("] %3d",a->x);
-	gotoxy(22+((double)a->x-8)/70.0*59.0,BASE_LINE_Y+5);
+	gotoxy(22+sr->x,BASE_LINE_Y+5);
 	printf("#");
 	gotoxy(10,BASE_LINE_Y+7);
-	printf("∏ﬂ∂»:      [");
+	printf("È´òÂ∫¶:      [");
 	printf("============================================================");
 	printf("] %3d",a->y);
-	gotoxy(22+((double)a->y-8)/42.0*59.0,BASE_LINE_Y+7);
-	if(a->y==9)
-		gotoxy(22,BASE_LINE_Y+7);
+	gotoxy(22+sr->y,BASE_LINE_Y+7);
 	printf("#");
 	gotoxy(10,BASE_LINE_Y+9);
-	printf("¿◊ ˝:      [");
+	printf("Èõ∑Êï∞:      [");
 	printf("============================================================");
 	printf("]%4d",a->n);
-	int nx = 22+((double)a->n-10)/(double)(a->x*a->y-24)*59.0;
-	gotoxy(nx!=22 && nx!= 81 ? nx+1 : nx,BASE_LINE_Y+9);
+	gotoxy(22+sr->n,BASE_LINE_Y+9);
 	printf("#");
 	gotoxy(10,BASE_LINE_Y+11);
-	printf("¿◊ ˝œ∏◊ºΩœ:[");
+	printf("Èõ∑Êï∞ÁªÜÂáÜËæÉ:[");
 	printf("=============================^==============================");
 	printf("] %+3d",a->sn);
-	gotoxy(51+((double)a->sn)/(a->x*a->y/59.0)*59.0,BASE_LINE_Y+11);
+	gotoxy(51+sr->sn,BASE_LINE_Y+11);
 	printf("#");
 	gotoxy(10,BASE_LINE_Y+13);
-	printf("ΩÁ√ÊÕ∏√˜∂»:[");
+	printf("ÁïåÈù¢ÈÄèÊòéÂ∫¶:[");
 	printf("============================================================");
 	printf("] %3d",a->t);
-	gotoxy(22+((double)a->t-99)/155.0*59.0,BASE_LINE_Y+13);
+	gotoxy(22+sr->t,BASE_LINE_Y+13);
 	printf("#");
-	st(a->t);
+}
+
+void settings(ag *a, ag *sr)
+{
+	clrscr();
+	SetConsoleTitle("Êâ´Èõ∑ - ËÆæÁΩÆ");
+	printsettings(a,sr);
 	gotoxy(17,21);
 	printf("*==============*");
 	gotoxy(17,22);
-	printf("|     »∑∂®     |");
+	printf("|     Á°ÆÂÆö     |");
 	gotoxy(17,23);
 	printf("*==============*");
 	gotoxy(57,21);
 	printf("*==============*");
 	gotoxy(57,22);
-	printf("|    ƒ¨»œ÷µ    |");
+	printf("|    ÈªòËÆ§ÂÄº    |");
 	gotoxy(57,23);
 	printf("*==============*");
-	int ntmp = a->n;
 	MCE *m = (MCE*)malloc(sizeof(MCE));
+	while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 	ag *copy = (ag*)malloc(sizeof(ag));
-	while(1)
+	for(;;)
 	{
-		copy->x = a->x;
-		copy->y = a->y;
-		copy->n = a->n;
-		copy->sn = a->sn;
-		copy->t = a->t;
 		if(!Mouse_ReadConClickEvent(m))
 			continue;
 		if(m->Button == 0)
@@ -488,138 +501,187 @@ setbeg:
 				free(copy);
 				return;
 			}
-			if(m->cPos.Y >= 21 && m->cPos.Y <= 23 && m->cPos.X>56 && m->cPos.X<73)
+			else if(m->cPos.Y >= 21 && m->cPos.Y <= 23 && m->cPos.X>56 && m->cPos.X<73)
 			{
 				a->x=9;
 				a->y=9;
 				a->n=10;
 				a->sn=0;
 				a->t=255;
-				goto setbeg;
-			}
-			if(m->cPos.Y == BASE_LINE_Y+5 && m->cPos.X>21 && m->cPos.X<82)
-			{
-				int tmp = (double)(m->cPos.X-22)/59.0*70+9;
-				if(copy->x == tmp)
-					continue;
-				gotoxy(22,BASE_LINE_Y+5);
-				printf("============================================================");
-				gotoxy(m->cPos.X,m->cPos.Y);
-				printf("#");
-				a->x = tmp;
-				gotoxy(84,BASE_LINE_Y+5);
-				printf("%3d",a->x);
 
-				//∏¸–¬¿◊ ˝
-				gotoxy(22,BASE_LINE_Y+9);
-				printf("============================================================");
-				int nx = 22+((double)a->n-10)/(double)(a->x*a->y-24)*59.0;
-				if(nx>81)
-				{
-					a->n = ntmp = a->x*a->y-14;
-					gotoxy(83,BASE_LINE_Y+9);
-					printf("%4d",a->n);
-					nx=81;
-				}
-				gotoxy(nx!=22 && nx!= 81 ? nx+1 : nx,BASE_LINE_Y+9);
-				printf("#");
-
-				a->sn=0;
-				gotoxy(22,BASE_LINE_Y+11);
-				printf("=============================#==============================");
-				printf("] %+3d",a->sn);
-			}
-			if(m->cPos.Y == BASE_LINE_Y+7 && m->cPos.X>21 && m->cPos.X<82)
-			{
-				int tmp = (double)(m->cPos.X-22)/59.0*41+9;
-				if(copy->y == tmp && tmp != 9)
-					continue;
-				gotoxy(22,BASE_LINE_Y+7);
-				printf("============================================================");
-				gotoxy(m->cPos.X,m->cPos.Y);
-				printf("#");
-				a->y = tmp;
-				gotoxy(84,BASE_LINE_Y+7);
-				printf("%3d",a->y);
-
-				//∏¸–¬¿◊ ˝
-				gotoxy(22,BASE_LINE_Y+9);
-				printf("============================================================");
-				int nx = 22+((double)a->n-10)/(double)(a->x*a->y-24)*59.0;
-				if(nx>81)
-				{
-					a->n = ntmp = a->x*a->y-14;
-					gotoxy(83,BASE_LINE_Y+9);
-					printf("%4d",a->n);
-					nx=81;
-				}
-				gotoxy(nx!=22 && nx!= 81 ? nx+1 : nx,BASE_LINE_Y+9);
-				printf("#");
-
-				a->sn=0;
-				gotoxy(22,BASE_LINE_Y+11);
-				printf("=============================#==============================");
-				printf("] %+3d",a->sn);
-			}
-			if(m->cPos.Y == BASE_LINE_Y+9 && m->cPos.X>21 && m->cPos.X<82)
-			{
-				int tmp = (double)(m->cPos.X-22)/59.0*(a->x*a->y-24)+10;
-				if(copy->n==tmp)
-					continue;
-				gotoxy(22,BASE_LINE_Y+9);
-				printf("============================================================");
-				gotoxy(m->cPos.X,m->cPos.Y);
-				printf("#");
-				a->n = tmp;
-				ntmp = a->n;
-				gotoxy(83,BASE_LINE_Y+9);
-				printf("%4d",a->n);
-
-				a->sn=0;
-				gotoxy(22,BASE_LINE_Y+11);
-				printf("=============================#==============================");
-				printf("] %+3d",a->sn);
-			}
-			if(m->cPos.Y == BASE_LINE_Y+11 && m->cPos.X>21 && m->cPos.X<82)
-			{
-				int tmp = (double)(m->cPos.X-22) / 59.0 * (double)(a->x*a->y/59.0) - (a->x*a->y/59.0)/2;
-				gotoxy(22,BASE_LINE_Y+11);
-				printf("=============================^==============================");
-				gotoxy(m->cPos.X,m->cPos.Y);
-				printf("#");
-				a->sn = tmp;
-				gotoxy(84,BASE_LINE_Y+11);
-				printf("%+3d",a->sn);
-
-				if(copy->sn == tmp)
-					continue;
-
-				//∏¸–¬¿◊ ˝
-				gotoxy(22,BASE_LINE_Y+9);
-				printf("============================================================");
-				a->n = ntmp;
-				a->n+=a->sn;
-				a->n = a->n<=0?1:a->n;
-				int nx = 22+((double)a->n-10)/(double)(a->x*a->y-24)*59.0;
-				gotoxy(nx!=22 && nx!= 81 ? nx+1 : nx,BASE_LINE_Y+9);
-				printf("#");
-				gotoxy(83,BASE_LINE_Y+9);
-				printf("%4d",a->n);
-			}
-			if(m->cPos.Y == BASE_LINE_Y+13 && m->cPos.X>21 && m->cPos.X<82)
-			{
-				int tmp = (double)(m->cPos.X-22)/59.0*155+100;
-				if(copy->t == tmp)
-					continue;
-				gotoxy(22,BASE_LINE_Y+13);
-				printf("============================================================");
-				gotoxy(m->cPos.X,m->cPos.Y);
-				printf("#");
-				a->t = tmp;
-				gotoxy(84,BASE_LINE_Y+13);
+				sr->x = 0;
+				sr->y = 0;
+				sr->n = 0;
+				sr->sn = 0;
+				sr->t = 59;
+				printsettings(a,sr);
 				st(a->t);
-				printf("%3d",a->t);
+				while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 			}
+			else if(m->cPos.Y == BASE_LINE_Y+5 && m->cPos.X>21 && m->cPos.X<82)
+			{
+				do{
+					if(m->cPos.X<=21 || m->cPos.X>=82 || m->cPos.X-22 == sr->x)
+						continue;
+					gotoxy(sr->x+22,BASE_LINE_Y+5);
+					printf("=");
+					sr->x = m->cPos.X-22;
+					a->x = (double)(m->cPos.X-22)/59.0*70+9;
+					gotoxy(m->cPos.X,BASE_LINE_Y+5);
+					printf("#");
+					gotoxy(84,BASE_LINE_Y+5);
+					printf("%3d",a->x);
+
+					int nx = ((double)a->n-10)/(double)(a->x*a->y-24)*59.0;
+					nx = (nx!=0) && (nx!=59)?nx+1:nx;
+					if(sr->n != nx)
+					{
+						gotoxy(sr->n+22,BASE_LINE_Y+9);
+						printf("=");
+						sr->n = nx;
+						if(nx>59)
+						{
+							a->n = a->x*a->y-14;
+							gotoxy(83,BASE_LINE_Y+9);
+							printf("%4d",a->n);
+							sr->n = nx=59;
+						}
+						gotoxy(nx+22,BASE_LINE_Y+9);
+						printf("#");
+					}
+
+					if(sr->sn != 0)
+					{
+						gotoxy(sr->sn+51,BASE_LINE_Y+11);
+						printf("=");
+						a->sn=0;
+						sr->sn=0;
+						gotoxy(51,BASE_LINE_Y+11);
+						printf("#");
+						gotoxy(82,BASE_LINE_Y+11);
+						printf("] %+3d",a->sn);
+					}
+				} while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
+			}
+			else if(m->cPos.Y == BASE_LINE_Y+7 && m->cPos.X>21 && m->cPos.X<82)
+			{
+				do{
+					if(m->cPos.X<=21 || m->cPos.X>=82 || m->cPos.X-22 == sr->y)
+						continue;
+					gotoxy(sr->y+22,BASE_LINE_Y+7);
+					printf("=");
+					sr->y = m->cPos.X-22;
+					a->y = (double)(m->cPos.X-22)/59.0*41+9;
+					gotoxy(m->cPos.X,BASE_LINE_Y+7);
+					printf("#");
+					gotoxy(84,BASE_LINE_Y+7);
+					printf("%3d",a->y);
+
+					int nx = ((double)a->n-10)/(double)(a->x*a->y-24)*59.0;
+					nx = (nx!=0) && (nx!=59)?nx+1:nx;
+					if(sr->n != nx)
+					{
+						gotoxy(sr->n+22,BASE_LINE_Y+9);
+						printf("=");
+						sr->n = nx;
+						if(nx>59)
+						{
+							a->n = a->x*a->y-14;
+							gotoxy(83,BASE_LINE_Y+9);
+							printf("%4d",a->n);
+							sr->n = nx=59;
+						}
+						gotoxy(nx+22,BASE_LINE_Y+9);
+						printf("#");
+					}
+					if(sr->sn != 0)
+					{
+						gotoxy(sr->sn+51,BASE_LINE_Y+11);
+						printf("=");
+						a->sn=0;
+						sr->sn=0;
+						gotoxy(51,BASE_LINE_Y+11);
+						printf("#");
+						gotoxy(82,BASE_LINE_Y+11);
+						printf("] %+3d",a->sn);
+					}
+				} while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
+			}
+			else if(m->cPos.Y == BASE_LINE_Y+9 && m->cPos.X>21 && m->cPos.X<82)
+			{
+				do{
+					if(m->cPos.X<=21 || m->cPos.X>=82 || m->cPos.X-22 == sr->n)
+						continue;
+					gotoxy(sr->n+22,BASE_LINE_Y+9);
+					printf("=");
+					sr->n = m->cPos.X-22;
+					a->n = (double)(m->cPos.X-22)/59.0*(a->x*a->y-24)+10;
+					gotoxy(m->cPos.X,BASE_LINE_Y+9);
+					printf("#");
+					gotoxy(83,BASE_LINE_Y+9);
+					printf("%4d",a->n);
+
+					if(sr->sn != 0)
+					{
+						gotoxy(sr->sn+51,BASE_LINE_Y+11);
+						printf("=");
+						a->sn=0;
+						sr->sn=0;
+						gotoxy(51,BASE_LINE_Y+11);
+						printf("#");
+						gotoxy(82,BASE_LINE_Y+11);
+						printf("] %+3d",a->sn);
+					}
+				} while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
+			}
+			else if(m->cPos.Y == BASE_LINE_Y+11 && m->cPos.X>21 && m->cPos.X<82)
+			{
+				do{
+					if(m->cPos.X<=21 || m->cPos.X>=82 || m->cPos.X-51 == sr->sn)
+						continue;
+					a->n -= a->sn;
+					gotoxy(sr->sn+51,BASE_LINE_Y+11);
+					printf(sr->sn==0?"^":"=");
+					sr->sn = m->cPos.X-51;
+					a->sn = (double)(m->cPos.X-22) / 59.0 * (double)(a->x*a->y/59.0) - (a->x*a->y/59.0)/2;
+					gotoxy(m->cPos.X,BASE_LINE_Y+11);
+					printf("#");
+					gotoxy(84,BASE_LINE_Y+11);
+					printf("%+3d",a->sn);
+
+					a->n+=a->sn;
+					a->n = a->n<=0?1:a->n;
+					int ntmp = sr->n;
+					sr->n = ((double)a->n-10)/(double)(a->x*a->y-24)*59.0;
+					sr->n += (sr->n!=0) && (sr->n!=59)?1:0;
+					if(ntmp != sr->n)
+					{
+						gotoxy(ntmp+22, BASE_LINE_Y+9);
+						printf("=");
+						gotoxy(sr->n+22, BASE_LINE_Y+9);
+						printf("#");
+					}
+					gotoxy(83,BASE_LINE_Y+9);
+					printf("%4d",a->n);
+				} while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
+			}
+			else if(m->cPos.Y == BASE_LINE_Y+13 && m->cPos.X>21 && m->cPos.X<82)
+			{
+				do{
+					if(m->cPos.X<=21 || m->cPos.X>=82 || m->cPos.X-22 == sr->t)
+						continue;
+					gotoxy(sr->t+22,BASE_LINE_Y+13);
+					printf("=");
+					sr->t = m->cPos.X-22;
+					a->t = (double)(m->cPos.X-22)/59.0*155+100;
+					gotoxy(m->cPos.X,BASE_LINE_Y+13);
+					printf("#");
+					gotoxy(84,BASE_LINE_Y+13);
+					st(a->t);
+					printf("%3d",a->t);
+				} while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
+			}
+			while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 		}
 	}
 }
@@ -628,35 +690,56 @@ int main(int argc, char *argv[])
 {
 	init_window();
 	ag *a = (ag*)malloc(sizeof(ag));
-	a->x=9;
-	a->y=9;
-	a->n=10;
-	a->sn=0;
-	a->t=255;
+	a->x = 9;
+	a->y = 9;
+	a->n = 10;
+	a->sn = 0;
+	a->t = 255;
+	ag *sr = (ag*)malloc(sizeof(ag));
+	sr->x = 0;
+	sr->y = 0;
+	sr->n = 0;
+	sr->sn = 0;
+	sr->t = 59;
 	printmain();
 	MCE *m = (MCE*)malloc(sizeof(MCE));
-	while(1)
+	for(;;)
 	{
 		if(!Mouse_ReadConClickEvent(m) || m->Button)
 			continue;
 		if(m->cPos.Y >= BASE_LINE_Y+5 && m->cPos.Y <= BASE_LINE_Y+7 && m->cPos.X>=BASE_LINE_X && m->cPos.X<BASE_LINE_X+16)
 		{
-			if(gamemain(a->x, a->y, a->n))
+			int err = gamemain(a->x, a->y, a->n);
+			if(err != 0)
 			{
 				SetConSize(90,30);
 				clrscr();
-				gotoxy(30,7);
-				printf("¿◊ ˝…Ë÷√π˝¥Û,«Î÷ÿ–¬…Ë÷√¿◊ ˝!");
+				switch(err)
+				{
+					case -1:
+						gotoxy(29,7);
+						printf("Èõ∑Êï∞ËÆæÁΩÆËøáÂ§ß,ËØ∑ÈáçÊñ∞ËÆæÁΩÆÈõ∑Êï∞!");
+						break;
+					case -2:
+						gotoxy(27,7);
+						printf("ÂÆΩÂ∫¶ÂíåÈ´òÂ∫¶Â∑ÆË∑ùËøáÂ§ß,ËØ∑ÈáçÊñ∞ËÆæÁΩÆÂÆΩÈ´ò!");
+						break;
+					default:
+						printf("ËÆæÁΩÆÈîôËØØ,ÂéüÂõ†Êú™Áü•");
+						break;
+				}
 				gotoxy(35,17);
 				printf("*==============*");
 				gotoxy(35,18);
-				printf("|     »∑∂®     |");
+				printf("|     Á°ÆÂÆö     |");
 				gotoxy(35,19);
 				printf("*==============*");
 				while(!Mouse_ReadConClickEvent(m) || m->Button || !(m->cPos.Y >= 17 && m->cPos.Y <= 19 && m->cPos.X>34 && m->cPos.X<51));
 				a->n -= a->sn;
 				a->sn = 0;
-				settings(a);
+				sr->sn = 0;
+				settings(a,sr);
+				while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 			}
 			Mouse_ReadConClickEvent(m);
 			printmain();
@@ -664,18 +747,21 @@ int main(int argc, char *argv[])
 		}
 		if(m->cPos.Y >= BASE_LINE_Y+9 && m->cPos.Y <= BASE_LINE_Y+11 && m->cPos.X>=BASE_LINE_X && m->cPos.X<BASE_LINE_X+16)
 		{
-			settings(a);
+			settings(a,sr);
 			printmain();
+			while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 		}
 		if(m->cPos.Y >= BASE_LINE_Y+13 && m->cPos.Y <= BASE_LINE_Y+15 && m->cPos.X>=BASE_LINE_X && m->cPos.X<BASE_LINE_X+16)
 		{
 			help();
 			printmain();
+			while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 		}
 		if(m->cPos.Y >= BASE_LINE_Y+17 && m->cPos.Y <= BASE_LINE_Y+19 && m->cPos.X>=BASE_LINE_X && m->cPos.X<BASE_LINE_X+16)
 		{
 			about();
 			printmain();
+			while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 		}
 		if(m->cPos.Y >= BASE_LINE_Y+21 && m->cPos.Y <= BASE_LINE_Y+23 && m->cPos.X>=BASE_LINE_X && m->cPos.X<BASE_LINE_X+16)
 		{
@@ -686,5 +772,6 @@ int main(int argc, char *argv[])
 			}
 			return 0;
 		}
+		while(!Mouse_ReadConClickEvent(m) || m->Button == 0);
 	}
 }
