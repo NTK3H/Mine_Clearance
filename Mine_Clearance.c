@@ -180,24 +180,32 @@ int gamemain(int x, int y, int n)
 			if((op[m->cPos.X/2][m->cPos.Y] == 0) || (op[m->cPos.X/2][m->cPos.Y] == 3))
 			{
 				op[m->cPos.X/2][m->cPos.Y] = 1;
+				if(!first)
+				{
+					for(int i=0;i<3;++i)
+						for(int j=0;j<3;++j)
+						{
+							COORD new = {m->cPos.X-2+i*2,m->cPos.Y-1+j};
+							if(isTouch(mi, &new, &(COORD){x*2,y}))
+							{
+								mi[new.X/2][new.Y] = 0;
+								op[new.X/2][new.Y] = 0;
+								tmp.X = rand()%x;
+								tmp.Y = rand()%y;
+								while((tmp.X*2>=m->cPos.X-2 && tmp.X*2<=m->cPos.X+2 && tmp.Y>=m->cPos.Y-1 && tmp.Y<=m->cPos.Y+1) || mi[tmp.X][tmp.Y])
+								{
+									tmp.X = rand()%x;
+									tmp.Y = rand()%y;
+								}
+								mi[tmp.X][tmp.Y] = 1;
+							}
+						}
+					clear(mi,op,&m->cPos, &(COORD){x*2,y});
+					first = 1;
+					continue;
+				}
 				if(isTouch(mi, &m->cPos, &(COORD){x*2,y}))
 				{
-					if(!first)
-					{
-						mi[m->cPos.X/2][m->cPos.Y] = 0;
-						op[m->cPos.X/2][m->cPos.Y] = 0;
-						tmp.X = rand()%x;
-						tmp.Y = rand()%y;
-						while(((tmp.X==m->cPos.X/2) && (tmp.Y==m->cPos.Y)) || mi[tmp.X][tmp.Y])
-						{
-							tmp.X = rand()%x;
-							tmp.Y = rand()%y;
-						}
-						mi[tmp.X][tmp.Y] = first = 1;
-						clear(mi,op,&m->cPos, &(COORD){x*2,y});
-						first = 1;
-						continue;
-					}
 lose:
 					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED | FOREGROUND_BLUE);
 					for(int i=0;i<y;++i)
